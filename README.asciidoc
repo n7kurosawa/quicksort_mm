@@ -1,0 +1,36 @@
+= Quicksort/Quickselect with median of medians
+
+== About
+This is an implementation of Quicksort and Quickselect[1].
+
+Instead of the introspection technique[2,3], this implementation uses 
+(a variant of) the median of medians[4] to ensure that the worst case 
+runtimes of the routines are Θ(N ln N) and Θ(N), respectively.
+
+This program is under the CC0 and without any warranty.
+
+1. C.A.R. Hoare, Commun. ACM 4, 321 (1961).
+2. 野崎昭弘, 杉本俊彦, 情報処理学会論文誌 21, 164 (1980).
+3. D.R. Musser, Software Pract. Exper. 27, 983 (1997).
+4. M. Blum, et al., J. Comput. Syst. Sci. 7, 448 (1973).
+
+== How to use
+This is header only library (+src/quicksort\_mm.hh+).
+The main routines have the following prototypes:
+
+--------
+template<class RandomAccessIterator>
+void quicksort_mm::quicksort(
+    RandomAccessIterator first, 
+    RandomAccessIterator last
+);
+
+template<class RandomAccessIterator>
+RandomAccessIterator quicksort_mm::quickselect(
+    RandomAccessIterator first,
+    RandomAccessIterator last,
+    size_t k
+);
+--------
+
+If +last - first <= k+, +quicksort\_mm::quickselect+ returns +last+.
