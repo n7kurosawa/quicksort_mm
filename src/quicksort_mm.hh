@@ -127,9 +127,10 @@ namespace quicksort_mm {
     // The cutoff value 15 is taken as in the paper:
     // M. Durand, Inf. Process. Lett. 85, 73 (2003).
     if (nelem < 15) return first + nelem/2;
-    // The cutoff value 30*s_ is not optimized and should be refined.
-    if (nelem < 30*s_) return median3(first, first+nelem/2, last-1);
-  
+    // The following cutoff values are not optimized and should be refined.
+    if (nelem < 80) return median3(first, first+nelem/2, last-1);
+    if (nelem < std::max(30*s_,200)) return median5(first, first+nelem/4, first+nelem/2, first+3*nelem/4, last-1);
+
     size_t nnext = nelem/(15*s_);
     auto p = first + 0*(nelem/15);
     auto q = first + 7*(nelem/15);
