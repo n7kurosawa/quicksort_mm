@@ -15,7 +15,28 @@ This program is under the CC0 and without any warranty.
 4. M. Blum, et al., J. Comput. Syst. Sci. 7, 448 (1973).
 
 == How to use
-This is header only library (+src/quicksort\_mm.hh+).
+
+=== C
+The main routines have the following prototypes:
+--------
+void quicksort_mm_quicksort(
+    void *p, size_t nelem, size_t size, 
+    int (*cmp)(const void *, const void *)
+);
+
+void quicksort_mm_quickselect(
+    void *p, size_t nelem, size_t size, 
+    size_t kth, 
+    int (*cmp)(const void *, const void *)
+);
+--------
+
+The function +quicksort\_mm\_quickselect+ modifies the input array,
+ and set the k-th element to the k-th position. 
+
+
+=== C\+\+
+This is header only library (+src/cc/quicksort\_mm.hh+).
 The main routines have the following prototypes:
 
 --------
