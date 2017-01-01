@@ -158,10 +158,8 @@ namespace quicksort_mm {
     size_t nelem = last - first;  
     if (nelem == 1) return first;
     if (nelem == 2) {
-      return (k == 0)
-        ? (first[0] < first[1] ? first : first+1) 
-        : (first[0] < first[1] ? first+1 : first) 
-        ;
+      if (first[0] > first[1]) std::swap(first[0], first[1]);
+      return first+k;
     }
 
     auto pivot = rs3_5_2_select_pivot<s_>(first, last);
@@ -220,11 +218,12 @@ namespace quicksort_mm {
   // Worst:  26.40 N + o(N)
   // ======================================================
   template<class RandomAccessIterator>
-  RandomAccessIterator quickselect(RandomAccessIterator first, RandomAccessIterator last, size_t k)
+  void quickselect(RandomAccessIterator first, RandomAccessIterator kth, RandomAccessIterator last)
   {
+    size_t k = kth - first;
     size_t nelem = last - first;
-    if (nelem <= k) return last;
-    return rs3_5_2_select_kth<21>(first, last, k);
+    if (nelem <= k) return;
+    rs3_5_2_select_kth<21>(first, last, k);
   }
 }
 

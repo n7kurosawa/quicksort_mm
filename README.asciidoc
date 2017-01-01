@@ -26,11 +26,11 @@ void quicksort_mm::quicksort(
 );
 
 template<class RandomAccessIterator>
-RandomAccessIterator quicksort_mm::quickselect(
+void quicksort_mm::quickselect(
     RandomAccessIterator first,
-    RandomAccessIterator last,
-    size_t k
+    RandomAccessIterator kth,
+    RandomAccessIterator last
 );
 --------
 
-If +last - first <= k+, +quicksort\_mm::quickselect+ returns +last+.
+The aboves are the same as std::sort and std::nth_element.
