@@ -32,47 +32,47 @@ namespace quicksort_mm {
   // ======================================================
 
   // Get the median of given three elements.
-  template<class RAIt>
-  inline RAIt median3(RAIt a, RAIt b, RAIt c)
+  template<class RAIt, class Cmp>
+  inline RAIt median3(RAIt a, RAIt b, RAIt c, Cmp cmp)
   {
-    return (*a < *b)
-      ? ((*b < *c) ? b : ((*a < *c) ? c : a))
-      : ((*a < *c) ? a : ((*b < *c) ? c : b));
+    return cmp(*a, *b)
+      ? (cmp(*b, *c) ? b : (cmp(*a, *c) ? c : a))
+      : (cmp(*a, *c) ? a : (cmp(*b, *c) ? c : b));
   }
 
   // Get the median of given five elements.
-  template<class RAIt>
-  inline RAIt median5(RAIt a, RAIt b, RAIt c, RAIt d, RAIt e)
+  template<class RAIt, class Cmp>
+  inline RAIt median5(RAIt a, RAIt b, RAIt c, RAIt d, RAIt e, Cmp cmp)
   {
-    if (*a > *b) std::swap(a, b);
-    if (*c > *d) std::swap(c, d);
-    if (*a > *c) {
+    if (cmp(*b, *a)) std::swap(a, b);
+    if (cmp(*d, *c)) std::swap(c, d);
+    if (cmp(*c, *a)) {
       std::swap(a, c);
       std::swap(b, d);
     }
-    if (*b > *e) std::swap(b, e);
-    if (*b > *c) {
-      return *b > *d ? d : b;
+    if (cmp(*e, *b)) std::swap(b, e);
+    if (cmp(*c, *b)) {
+      return cmp(*d, *b) ? d : b;
     }
     else {
-      return *c > *e ? e : c;
+      return cmp(*e, *c) ? e : c;
     }
   }
 
 
   // Simple insertion sort
-  template<class RAIt>
-  inline void insertion_sort(RAIt first, RAIt last)
+  template<class RAIt, class Cmp>
+  inline void insertion_sort(RAIt first, RAIt last, Cmp cmp)
   {
     if (first == last) return;
     for (auto current = first+1; current != last; current++) {
-      if (*current < *(current-1)) {
+      if (cmp(*current, *(current-1))) {
         auto cursor = current;
         auto target = *current;
         do {
           *cursor = *(cursor-1);
           cursor--;
-        } while (first != cursor && target < *(cursor-1));
+        } while (first != cursor && cmp(target, *(cursor-1)));
         *cursor = target;
       }
     }
@@ -80,8 +80,8 @@ namespace quicksort_mm {
 
 
   // Hoare's Partition
-  template<class RAIt>
-  RAIt partition(RAIt first, RAIt last, RAIt pivot)
+  template<class RAIt, class Cmp>
+  RAIt partition(RAIt first, RAIt last, RAIt pivot, Cmp cmp)
   {
     if (first != pivot) std::swap(*first, *pivot);
     pivot = first;
@@ -90,12 +90,12 @@ namespace quicksort_mm {
       for (;;) {
         hi--;
         if (lo == hi) goto PARTITION_END;
-        if (*hi <= *pivot) break;
+        if (!cmp(*pivot, *hi)) break;
       }
       for (;;) {
         lo++;
         if (lo == hi) goto PARTITION_END;
-        if (*lo >= *pivot) break; 
+        if (!cmp(*lo, *pivot)) break; 
       }
       std::swap(*lo, *hi);
     }
@@ -109,17 +109,17 @@ namespace quicksort_mm {
   // Median of Medians
   // ======================================================
 
-  template<int s_=2, class RAIt>
-  RAIt rs3_5_2_select_pivot(RAIt first, RAIt last);
+  template<int s_=2, class RAIt, class Cmp>
+  RAIt rs3_5_2_select_pivot(RAIt first, RAIt last, Cmp cmp);
 
-  template<int s_=2, class RAIt>
-  RAIt rs3_5_2_select_kth(RAIt first, RAIt last, size_t k);
+  template<int s_=2, class RAIt, class Cmp>
+  RAIt rs3_5_2_select_kth(RAIt first, RAIt last, size_t k, Cmp cmp);
 
 
   // Extension of the repeated step algorithm (3-5).
   // 3-3 and 4-4 are presented in the original paper.
-  template<int s_, class RAIt>
-  RAIt rs3_5_2_select_pivot(RAIt first, RAIt last)
+  template<int s_, class RAIt, class Cmp>
+  RAIt rs3_5_2_select_pivot(RAIt first, RAIt last, Cmp cmp)
   {
     static_assert(s_ > 0, "Thinning parameter must be positive");
   
@@ -128,8 +128,8 @@ namespace quicksort_mm {
     // M. Durand, Inf. Process. Lett. 85, 73 (2003).
     if (nelem < 15) return first + nelem/2;
     // The following cutoff values are not optimized and should be refined.
-    if (nelem < 80) return median3(first, first+nelem/2, last-1);
-    if (nelem < std::max(30*s_,200)) return median5(first, first+nelem/4, first+nelem/2, first+3*nelem/4, last-1);
+    if (nelem < 80) return median3(first, first+nelem/2, last-1, cmp);
+    if (nelem < std::max(30*s_,200)) return median5(first, first+nelem/4, first+nelem/2, first+3*nelem/4, last-1, cmp);
 
     size_t nnext = nelem/(15*s_);
     auto p = first + 0*(nelem/15);
@@ -137,21 +137,21 @@ namespace quicksort_mm {
     auto r = last - 7*nnext;
 
     for (size_t i = 0; i < nnext; i++) {
-      auto x0 = median3(p+i*7+0, p+i*7+1, p+i*7+2);
-      auto x1 = median3(p+i*7+3, p+i*7+4, p+i*7+5);
-      auto x2 = median3(p+i*7+6, q+i,     r+i*7+0);
-      auto x3 = median3(r+i*7+1, r+i*7+2, r+i*7+3);
-      auto x4 = median3(r+i*7+4, r+i*7+5, r+i*7+6);
+      auto x0 = median3(p+i*7+0, p+i*7+1, p+i*7+2, cmp);
+      auto x1 = median3(p+i*7+3, p+i*7+4, p+i*7+5, cmp);
+      auto x2 = median3(p+i*7+6, q+i,     r+i*7+0, cmp);
+      auto x3 = median3(r+i*7+1, r+i*7+2, r+i*7+3, cmp);
+      auto x4 = median3(r+i*7+4, r+i*7+5, r+i*7+6, cmp);
 
-      auto xx = median5(x0, x1, x2, x3, x4);
+      auto xx = median5(x0, x1, x2, x3, x4, cmp);
       if (xx != q+i) std::swap(*xx, *(q+i));
     }
-    return rs3_5_2_select_kth(q, q+nnext, nnext/2);
+    return rs3_5_2_select_kth(q, q+nnext, nnext/2, cmp);
   }
 
 
-  template<int s_, class RAIt>
-  static RAIt rs3_5_2_select_kth(RAIt first, RAIt last, size_t k)
+  template<int s_, class RAIt, class Cmp>
+  static RAIt rs3_5_2_select_kth(RAIt first, RAIt last, size_t k, Cmp cmp)
   {
     static_assert(s_ > 0, "Thinning parameter must be positive");
 
@@ -162,16 +162,16 @@ namespace quicksort_mm {
       return first+k;
     }
 
-    auto pivot = rs3_5_2_select_pivot<s_>(first, last);
-    auto pivotx = partition(first, last, pivot);
+    auto pivot = rs3_5_2_select_pivot<s_>(first, last, cmp);
+    auto pivotx = partition(first, last, pivot, cmp);
   
     size_t nl = pivotx - first;
 
     if (nl < k) {
-      return rs3_5_2_select_kth(pivotx + 1, last, k-nl-1);
+      return rs3_5_2_select_kth(pivotx + 1, last, k-nl-1, cmp);
     }
     else if (k < nl) {
-      return rs3_5_2_select_kth(first, first+nl, k);
+      return rs3_5_2_select_kth(first, first+nl, k, cmp);
     }
     else {
       return pivotx;
@@ -186,27 +186,35 @@ namespace quicksort_mm {
   // Random:  1.55 N ln N + O(N)
   // Worst:  21.33 N ln N + O(N)
   // ======================================================
-  template<class RandomAccessIterator>
-  void quicksort(RandomAccessIterator first, RandomAccessIterator last)
+  template<class RandomAccessIterator, class Compare>
+  void quicksort(RandomAccessIterator first, RandomAccessIterator last, Compare cmp)
   {
     size_t nelem = last - first;
 
     if (nelem < 24) {
-      insertion_sort(first, last);
+      insertion_sort(first, last, cmp);
       return;
     }
 
-    auto pivot = rs3_5_2_select_pivot<21>(first, last);
-    auto pivot_position = partition(first, last, pivot);
+    auto pivot = rs3_5_2_select_pivot<21>(first, last, cmp);
+    auto pivot_position = partition(first, last, pivot, cmp);
 
     if (last - pivot_position < pivot_position - first) {
-      quicksort(pivot_position+1, last);
-      quicksort(first, pivot_position);
+      quicksort(pivot_position+1, last, cmp);
+      quicksort(first, pivot_position, cmp);
     }
     else {
-      quicksort(first, pivot_position);
-      quicksort(pivot_position+1, last);
+      quicksort(first, pivot_position, cmp);
+      quicksort(pivot_position+1, last, cmp);
     }
+  }
+
+
+  template<class RandomAccessIterator>
+  void quicksort(RandomAccessIterator first, RandomAccessIterator last)
+  {
+    std::less<typename std::iterator_traits<RandomAccessIterator>::value_type> cmp;
+    quicksort(first, last, cmp);
   }
 
 
@@ -217,13 +225,20 @@ namespace quicksort_mm {
   // Random:  2.83 N + o(N)
   // Worst:  26.40 N + o(N)
   // ======================================================
-  template<class RandomAccessIterator>
-  void quickselect(RandomAccessIterator first, RandomAccessIterator kth, RandomAccessIterator last)
+  template<class RandomAccessIterator, class Compare>
+  void quickselect(RandomAccessIterator first, RandomAccessIterator kth, RandomAccessIterator last, Compare cmp)
   {
     size_t k = kth - first;
     size_t nelem = last - first;
     if (nelem <= k) return;
-    rs3_5_2_select_kth<21>(first, last, k);
+    rs3_5_2_select_kth<21>(first, last, k, cmp);
+  }
+
+  template<class RandomAccessIterator>
+  void quickselect(RandomAccessIterator first, RandomAccessIterator kth, RandomAccessIterator last)
+  {
+    std::less<typename std::iterator_traits<RandomAccessIterator>::value_type> cmp;
+    quickselect(first, kth, last, cmp);
   }
 }
 

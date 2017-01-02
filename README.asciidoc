@@ -46,11 +46,27 @@ void quicksort_mm::quicksort(
     RandomAccessIterator last
 );
 
+template<class RandomAccessIterator, class Compare>
+void quicksort_mm::quicksort(
+    RandomAccessIterator first, 
+    RandomAccessIterator last,
+    Compare cmp
+);
+
+
 template<class RandomAccessIterator>
 void quicksort_mm::quickselect(
     RandomAccessIterator first,
     RandomAccessIterator kth,
     RandomAccessIterator last
+);
+
+template<class RandomAccessIterator, class Compare>
+void quicksort_mm::quickselect(
+    RandomAccessIterator first,
+    RandomAccessIterator kth,
+    RandomAccessIterator last,
+    Compare cmp
 );
 --------
 
