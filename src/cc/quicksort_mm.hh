@@ -110,16 +110,16 @@ namespace quicksort_mm {
   // ======================================================
 
   template<int s_=2, class RAIt, class Cmp>
-  RAIt rs3_5_2_select_pivot(RAIt first, RAIt last, Cmp cmp);
+  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp);
 
   template<int s_=2, class RAIt, class Cmp>
-  RAIt rs3_5_2_select_kth(RAIt first, RAIt last, size_t k, Cmp cmp);
+  RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp);
 
 
   // Extension of the repeated step algorithm (3-5).
   // 3-3 and 4-4 are presented in the original paper.
   template<int s_, class RAIt, class Cmp>
-  RAIt rs3_5_2_select_pivot(RAIt first, RAIt last, Cmp cmp)
+  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp)
   {
     static_assert(s_ > 0, "Thinning parameter must be positive");
   
@@ -146,12 +146,12 @@ namespace quicksort_mm {
       auto xx = median5(x0, x1, x2, x3, x4, cmp);
       if (xx != q+i) std::swap(*xx, *(q+i));
     }
-    return rs3_5_2_select_kth(q, q+nnext, nnext/2, cmp);
+    return rs3_5_2_find_kth(q, q+nnext, nnext/2, cmp);
   }
 
 
   template<int s_, class RAIt, class Cmp>
-  static RAIt rs3_5_2_select_kth(RAIt first, RAIt last, size_t k, Cmp cmp)
+  static RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp)
   {
     static_assert(s_ > 0, "Thinning parameter must be positive");
 
@@ -162,16 +162,16 @@ namespace quicksort_mm {
       return first+k;
     }
 
-    auto pivot = rs3_5_2_select_pivot<s_>(first, last, cmp);
+    auto pivot = rs3_5_2_pick_pivot<s_>(first, last, cmp);
     auto pivotx = partition(first, last, pivot, cmp);
   
     size_t nl = pivotx - first;
 
     if (nl < k) {
-      return rs3_5_2_select_kth(pivotx + 1, last, k-nl-1, cmp);
+      return rs3_5_2_find_kth(pivotx + 1, last, k-nl-1, cmp);
     }
     else if (k < nl) {
-      return rs3_5_2_select_kth(first, first+nl, k, cmp);
+      return rs3_5_2_find_kth(first, first+nl, k, cmp);
     }
     else {
       return pivotx;
@@ -196,7 +196,7 @@ namespace quicksort_mm {
       return;
     }
 
-    auto pivot = rs3_5_2_select_pivot<21>(first, last, cmp);
+    auto pivot = rs3_5_2_pick_pivot<21>(first, last, cmp);
     auto pivot_position = partition(first, last, pivot, cmp);
 
     if (last - pivot_position < pivot_position - first) {
@@ -231,7 +231,7 @@ namespace quicksort_mm {
     size_t k = kth - first;
     size_t nelem = last - first;
     if (nelem <= k) return;
-    rs3_5_2_select_kth<21>(first, last, k, cmp);
+    rs3_5_2_find_kth<21>(first, last, k, cmp);
   }
 
   template<class RandomAccessIterator>

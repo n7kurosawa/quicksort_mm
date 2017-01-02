@@ -146,10 +146,10 @@ PARTITION_END:;
 // Median of Medians
 // ======================================================
 
-static char *rs3_5_2_select_pivot(char *p, size_t n, size_t sz, size_t thin, comparator cmp);
-static char *rs3_5_2_select_kth(char *p, size_t n, size_t sz, size_t thin, size_t kth, comparator cmp);
+static char *rs3_5_2_pick_pivot(char *p, size_t n, size_t sz, size_t thin, comparator cmp);
+static char *rs3_5_2_find_kth(char *p, size_t n, size_t sz, size_t thin, size_t kth, comparator cmp);
 
-static char *rs3_5_2_select_pivot(char *p, size_t n, size_t sz, size_t thin, comparator cmp)
+static char *rs3_5_2_pick_pivot(char *p, size_t n, size_t sz, size_t thin, comparator cmp)
 {
     if (n < 15) return p + (n/2)*sz;
     if (n < 80) return median3(p, p+(n/2)*sz, p+(n-1)*sz, cmp);
@@ -169,11 +169,11 @@ static char *rs3_5_2_select_pivot(char *p, size_t n, size_t sz, size_t thin, com
 
         swap_unless_same(q0+i*sz, median5(s0,s1,s2,s3,s4,cmp), sz);
     }
-    return rs3_5_2_select_kth(q0, nnext, sz, 2, nnext/2, cmp);
+    return rs3_5_2_find_kth(q0, nnext, sz, 2, nnext/2, cmp);
 }
 
 
-static char *rs3_5_2_select_kth(char *p, size_t n, size_t sz, size_t thin, size_t kth, comparator cmp)
+static char *rs3_5_2_find_kth(char *p, size_t n, size_t sz, size_t thin, size_t kth, comparator cmp)
 {
     assert(kth < n);
 
@@ -183,7 +183,7 @@ static char *rs3_5_2_select_kth(char *p, size_t n, size_t sz, size_t thin, size_
         return p+kth*sz;
     }
 
-    char *pivot = rs3_5_2_select_pivot(p, n, sz, thin, cmp);
+    char *pivot = rs3_5_2_pick_pivot(p, n, sz, thin, cmp);
 
     assert(p <= pivot);
     assert((pivot - p) % sz == 0);
@@ -200,10 +200,10 @@ static char *rs3_5_2_select_kth(char *p, size_t n, size_t sz, size_t thin, size_
     size_t nr = n - nl - 1;
 
     if (nl < kth) {
-        return rs3_5_2_select_kth(pivotx + sz, nr, sz, 2, kth-nl-1, cmp);
+        return rs3_5_2_find_kth(pivotx + sz, nr, sz, 2, kth-nl-1, cmp);
     }
     else if (kth < nl) {
-        return rs3_5_2_select_kth(p, nl, sz, 2, kth, cmp);
+        return rs3_5_2_find_kth(p, nl, sz, 2, kth, cmp);
     }
     else {
         return pivotx;
@@ -240,7 +240,7 @@ static void quicksort_body(char *begin, char *end, size_t sz, comparator cmp)
     }
 
     // Partition
-    char *pivot = rs3_5_2_select_pivot(begin, n, sz, 21, cmp);
+    char *pivot = rs3_5_2_pick_pivot(begin, n, sz, 21, cmp);
     char *pivot_pos = partition(begin, pivot, n, sz, cmp);
 
     // Recursively apply
@@ -297,5 +297,5 @@ void quicksort_mm_quickselect(void *p, size_t n, size_t sz, size_t kth, comparat
     char *end = begin + n*sz;
 
     if (end < begin) return; // In this case the routine does not work.
-    rs3_5_2_select_kth(p, n, sz, 21, kth, cmp);
+    rs3_5_2_find_kth(p, n, sz, 21, kth, cmp);
 }
