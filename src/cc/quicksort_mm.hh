@@ -155,10 +155,10 @@ namespace quicksort_mm {
   {
     static_assert(s_ > 0, "Thinning parameter must be positive");
 
-    size_t nelem = last - first;  
-    if (nelem == 1) return first;
-    if (nelem == 2) {
-      if (first[0] > first[1]) std::swap(first[0], first[1]);
+    size_t nelem = last - first;
+
+    if (nelem < 7) {
+      insertion_sort(first, last, cmp);
       return first+k;
     }
 
