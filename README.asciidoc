@@ -31,12 +31,12 @@ void quicksort_mm_quickselect(
 );
 --------
 
-The function +quicksort\_mm\_quickselect+ modifies the input array,
+The function +quicksort_mm_quickselect+ modifies the input array,
  and set the k-th element to the k-th position. 
 
 
-=== C\+\+
-This is header only library (+src/cc/quicksort\_mm.hh+).
+=== C++
+This is header only library (+src/cc/quicksort_mm.hh+).
 The main routines have the following prototypes:
 
 --------
