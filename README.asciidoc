@@ -14,6 +14,45 @@ This program is under the CC0 and without any warranty.
 3. D.R. Musser, Software Pract. Exper. 27, 983 (1997).
 4. M. Blum, et al., J. Comput. Syst. Sci. 7, 448 (1973).
 
+
+== Benchmark
+
+We sort random sequence of one million distinct 32bits-integers 100-times and measure the comparison count and running time.
+We can see that our implementations are as efficient as the library routines of daily use.
+
+
+.Benchmark Environment
+|===========================================
+| CPU              | AMD A4-5300 APU
+| Memory           | 8 GiB
+| OS               | FreeBSD 11.0-RELEASE-p2
+| Compiler         | clang 3.8.0
+| Compiler Options | -O3 -DNDEBUG
+|===========================================
+
+
+
+.Quicksort Result
+[options="header"]
+|===========================================================
+|               | Comparison         | Time [s]
+|std::sort      | 21827463 +- 234015 | 0.132734 +- 0.001754
+|our C++ version| 21742200 +-   5786 | 0.095078 +- 0.002949
+|qsort          | 20894220 +- 166452 | 0.204375 +- 0.004931
+|our C version  | 20395319 +-   5097 | 0.183672 +- 0.005382
+|===========================================================
+
+
+.Quickselect Result
+[options="header"]
+|===========================================================
+|                 | Comparison        | Time [s]
+|std::nth_element | 2827650 +- 740922 | 0.008906 +- 0.003145 
+|our C++ version  | 2861488 +-   9820 | 0.012188 +- 0.003898 
+|===========================================================
+
+
+
 == How to use
 
 === C
