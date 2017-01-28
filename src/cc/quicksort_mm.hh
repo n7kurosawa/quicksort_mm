@@ -109,29 +109,27 @@ namespace quicksort_mm {
   // Median of Medians
   // ======================================================
 
-  template<int s_=2, class RAIt, class Cmp>
-  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp);
+  template<class RAIt, class Cmp>
+  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp, int s = 2);
 
-  template<int s_=2, class RAIt, class Cmp>
-  RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp);
+  template<class RAIt, class Cmp>
+  RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, int s=2);
 
 
   // Extension of the repeated step algorithm (3-5).
   // 3-3 and 4-4 are presented in the original paper.
-  template<int s_, class RAIt, class Cmp>
-  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp)
-  {
-    static_assert(s_ > 0, "Thinning parameter must be positive");
-  
+  template<class RAIt, class Cmp>
+  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp, int s)
+  {  
     size_t nelem = last - first;
     // The cutoff value 15 is taken as in the paper:
     // M. Durand, Inf. Process. Lett. 85, 73 (2003).
     if (nelem < 15) return first + nelem/2;
     // The following cutoff values are not optimized and should be refined.
     if (nelem < 80) return median3(first, first+nelem/2, last-1, cmp);
-    if (nelem < std::max(30*s_,200)) return median5(first, first+nelem/4, first+nelem/2, first+3*nelem/4, last-1, cmp);
+    if (nelem < std::max(30*s,200)) return median5(first, first+nelem/4, first+nelem/2, first+3*nelem/4, last-1, cmp);
 
-    size_t nnext = nelem/(15*s_);
+    size_t nnext = nelem/(15*s);
     auto p = first + 0*(nelem/15);
     auto q = first + 7*(nelem/15);
     auto r = last - 7*nnext;
@@ -150,11 +148,9 @@ namespace quicksort_mm {
   }
 
 
-  template<int s_, class RAIt, class Cmp>
-  static RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp)
+  template<class RAIt, class Cmp>
+  static RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, int s)
   {
-    static_assert(s_ > 0, "Thinning parameter must be positive");
-
     size_t nelem = last - first;
 
     if (nelem < 7) {
@@ -162,7 +158,7 @@ namespace quicksort_mm {
       return first+k;
     }
 
-    auto pivot = rs3_5_2_pick_pivot<s_>(first, last, cmp);
+    auto pivot = rs3_5_2_pick_pivot(first, last, cmp, s);
     auto pivotx = partition(first, last, pivot, cmp);
   
     size_t nl = pivotx - first;
@@ -196,7 +192,7 @@ namespace quicksort_mm {
       return;
     }
 
-    auto pivot = rs3_5_2_pick_pivot<21>(first, last, cmp);
+    auto pivot = rs3_5_2_pick_pivot(first, last, cmp, 21);
     auto pivot_position = partition(first, last, pivot, cmp);
 
     if (last - pivot_position < pivot_position - first) {
@@ -231,7 +227,7 @@ namespace quicksort_mm {
     size_t k = kth - first;
     size_t nelem = last - first;
     if (nelem <= k) return;
-    rs3_5_2_find_kth<21>(first, last, k, cmp);
+    rs3_5_2_find_kth(first, last, k, cmp, 21);
   }
 
   template<class RandomAccessIterator>
