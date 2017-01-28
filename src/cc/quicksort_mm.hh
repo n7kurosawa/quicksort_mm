@@ -105,29 +105,42 @@ namespace quicksort_mm {
   }
 
 
+  // approximate square root
+  inline size_t approx_sqrt(size_t n)
+  {
+    int base = -1;
+    while (0 < n) {
+      base += 1;
+      n /= 4;
+    }
+    return 1 << base;
+  }
+
+
   // ======================================================
   // Median of Medians
   // ======================================================
 
   template<class RAIt, class Cmp>
-  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp, int s = 2);
+  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp, size_t s);
 
   template<class RAIt, class Cmp>
-  RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, int s=2);
+  RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, size_t s);
 
 
   // Extension of the repeated step algorithm (3-5).
   // 3-3 and 4-4 are presented in the original paper.
   template<class RAIt, class Cmp>
-  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp, int s)
+  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp, size_t s)
   {  
+    if (s < 2) s = 2;
     size_t nelem = last - first;
     // The cutoff value 15 is taken as in the paper:
     // M. Durand, Inf. Process. Lett. 85, 73 (2003).
     if (nelem < 15) return first + nelem/2;
     // The following cutoff values are not optimized and should be refined.
     if (nelem < 80) return median3(first, first+nelem/2, last-1, cmp);
-    if (nelem < std::max(30*s,200)) return median5(first, first+nelem/4, first+nelem/2, first+3*nelem/4, last-1, cmp);
+    if (nelem/40 < s) return median5(first, first+nelem/4, first+nelem/2, first+3*nelem/4, last-1, cmp);
 
     size_t nnext = nelem/(15*s);
     auto p = first + 0*(nelem/15);
@@ -144,12 +157,12 @@ namespace quicksort_mm {
       auto xx = median5(x0, x1, x2, x3, x4, cmp);
       if (xx != q+i) std::swap(*xx, *(q+i));
     }
-    return rs3_5_2_find_kth(q, q+nnext, nnext/2, cmp);
+    return rs3_5_2_find_kth(q, q+nnext, nnext/2, cmp, s);
   }
 
 
   template<class RAIt, class Cmp>
-  static RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, int s)
+  static RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, size_t s)
   {
     size_t nelem = last - first;
 
@@ -164,10 +177,10 @@ namespace quicksort_mm {
     size_t nl = pivotx - first;
 
     if (nl < k) {
-      return rs3_5_2_find_kth(pivotx + 1, last, k-nl-1, cmp);
+      return rs3_5_2_find_kth(pivotx + 1, last, k-nl-1, cmp, s*12/17);
     }
     else if (k < nl) {
-      return rs3_5_2_find_kth(first, first+nl, k, cmp);
+      return rs3_5_2_find_kth(first, first+nl, k, cmp, s*12/17);
     }
     else {
       return pivotx;
@@ -183,26 +196,35 @@ namespace quicksort_mm {
   // Worst:  21.33 N ln N + O(N)
   // ======================================================
   template<class RandomAccessIterator, class Compare>
-  void quicksort(RandomAccessIterator first, RandomAccessIterator last, Compare cmp)
+  void quicksort_body(RandomAccessIterator first, RandomAccessIterator last, Compare cmp, size_t s)
   {
     size_t nelem = last - first;
+    if (s < 16) s = 16;
 
     if (nelem < 24) {
       insertion_sort(first, last, cmp);
       return;
     }
 
-    auto pivot = rs3_5_2_pick_pivot(first, last, cmp, 21);
+    auto pivot = rs3_5_2_pick_pivot(first, last, cmp, s);
     auto pivot_position = partition(first, last, pivot, cmp);
 
     if (last - pivot_position < pivot_position - first) {
-      quicksort(pivot_position+1, last, cmp);
-      quicksort(first, pivot_position, cmp);
+      quicksort_body(pivot_position+1, last, cmp, s*12/17);
+      quicksort_body(first, pivot_position, cmp, s*12/17);
     }
     else {
-      quicksort(first, pivot_position, cmp);
-      quicksort(pivot_position+1, last, cmp);
+      quicksort_body(first, pivot_position, cmp, s*12/17);
+      quicksort_body(pivot_position+1, last, cmp, s*12/17);
     }
+  }
+
+
+  template<class RandomAccessIterator, class Compare>
+  void quicksort_body(RandomAccessIterator first, RandomAccessIterator last, Compare cmp)
+  {
+    size_t nelem = last-first;
+    quicksort_body(first, last, cmp, approx_sqrt(nelem));
   }
 
 
@@ -210,7 +232,7 @@ namespace quicksort_mm {
   void quicksort(RandomAccessIterator first, RandomAccessIterator last)
   {
     std::less<typename std::iterator_traits<RandomAccessIterator>::value_type> cmp;
-    quicksort(first, last, cmp);
+    quicksort_body(first, last, cmp);
   }
 
 
@@ -227,7 +249,7 @@ namespace quicksort_mm {
     size_t k = kth - first;
     size_t nelem = last - first;
     if (nelem <= k) return;
-    rs3_5_2_find_kth(first, last, k, cmp, 21);
+    rs3_5_2_find_kth(first, last, k, cmp, approx_sqrt(nelem));
   }
 
   template<class RandomAccessIterator>
