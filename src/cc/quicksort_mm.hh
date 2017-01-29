@@ -12,12 +12,14 @@
 // * quicksort and quickselect[1], of course.
 // * median of medians or BFPRT[2].
 // * repeated step algorithms[3].
-// * thinning at the pivot selection[4].
+// * square root sampling[4].
+// * thinning at the pivot selection[5].
 //
 // [1] C.A.R. Hoare, Commun. ACM 4, 321 (1961).
 // [2] M. Blum, et al., J. Comput. Syst. Sci. 7, 448 (1973).
 // [3] K. Chen, A. Dumitrescu, arXiv:1409.3600 [cs.DS] (2014).
-// [4] N. Kurosawa, arXiv:1698.04852 [cs.DS] (2016).
+// [4] C.C. McGeoch, J.D. Tygar, Random Struct. Alg. 7, 287 (1995).
+// [5] N. Kurosawa, arXiv:1698.04852 [cs.DS] (2016).
 // ======================================================
 
 #ifndef QUICKSORT_MM_HH_INCLUDED
@@ -148,6 +150,7 @@ namespace quicksort_mm {
     auto r = last - 7*nnext;
 
     for (size_t i = 0; i < nnext; i++) {
+      // median of 5 median of 3
       auto x0 = median3(p+i*7+0, p+i*7+1, p+i*7+2, cmp);
       auto x1 = median3(p+i*7+3, p+i*7+4, p+i*7+5, cmp);
       auto x2 = median3(p+i*7+6, q+i,     r+i*7+0, cmp);
@@ -177,10 +180,10 @@ namespace quicksort_mm {
     size_t nl = pivotx - first;
 
     if (nl < k) {
-      return rs3_5_2_find_kth(pivotx + 1, last, k-nl-1, cmp, s*12/17);
+      return rs3_5_2_find_kth(pivotx + 1, last, k-nl-1, cmp, 2);
     }
     else if (k < nl) {
-      return rs3_5_2_find_kth(first, first+nl, k, cmp, s*12/17);
+      return rs3_5_2_find_kth(first, first+nl, k, cmp, 2);
     }
     else {
       return pivotx;
@@ -190,10 +193,6 @@ namespace quicksort_mm {
 
   // ======================================================
   // Quicksort with median of medians
-  //
-  // asymptotic comparison number for arrays of size N:
-  // Random:  1.55 N ln N + O(N)
-  // Worst:  21.33 N ln N + O(N)
   // ======================================================
   template<class RandomAccessIterator, class Compare>
   void quicksort_body(RandomAccessIterator first, RandomAccessIterator last, Compare cmp, size_t s)
@@ -209,6 +208,7 @@ namespace quicksort_mm {
     auto pivot = rs3_5_2_pick_pivot(first, last, cmp, s);
     auto pivot_position = partition(first, last, pivot, cmp);
 
+    // 12/17 ~ 0.7059 is an approximate value of sqrt(1/2)
     if (last - pivot_position < pivot_position - first) {
       quicksort_body(pivot_position+1, last, cmp, s*12/17);
       quicksort_body(first, pivot_position, cmp, s*12/17);
@@ -221,7 +221,7 @@ namespace quicksort_mm {
 
 
   template<class RandomAccessIterator, class Compare>
-  void quicksort_body(RandomAccessIterator first, RandomAccessIterator last, Compare cmp)
+  void quicksort(RandomAccessIterator first, RandomAccessIterator last, Compare cmp)
   {
     size_t nelem = last-first;
     quicksort_body(first, last, cmp, approx_sqrt(nelem));
@@ -232,16 +232,12 @@ namespace quicksort_mm {
   void quicksort(RandomAccessIterator first, RandomAccessIterator last)
   {
     std::less<typename std::iterator_traits<RandomAccessIterator>::value_type> cmp;
-    quicksort_body(first, last, cmp);
+    quicksort(first, last, cmp);
   }
 
 
   // ======================================================
   // Quickselect with median of medians
-  //
-  // asymptotic comparison number for arrays of size N:
-  // Random:  2.83 N + o(N)
-  // Worst:  26.40 N + o(N)
   // ======================================================
   template<class RandomAccessIterator, class Compare>
   void quickselect(RandomAccessIterator first, RandomAccessIterator kth, RandomAccessIterator last, Compare cmp)
