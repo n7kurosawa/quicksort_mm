@@ -124,10 +124,10 @@ namespace quicksort_mm {
   // ======================================================
 
   template<class RAIt, class Cmp>
-  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp, size_t s);
+  RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp, size_t s=2);
 
   template<class RAIt, class Cmp>
-  RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, size_t s);
+  RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, size_t s=2);
 
 
   // Extension of the repeated step algorithm (3-5).
@@ -180,10 +180,10 @@ namespace quicksort_mm {
     size_t nl = pivotx - first;
 
     if (nl < k) {
-      return rs3_5_2_find_kth(pivotx + 1, last, k-nl-1, cmp, 2);
+      return rs3_5_2_find_kth(pivotx + 1, last, k-nl-1, cmp);
     }
     else if (k < nl) {
-      return rs3_5_2_find_kth(first, first+nl, k, cmp, 2);
+      return rs3_5_2_find_kth(first, first+nl, k, cmp);
     }
     else {
       return pivotx;
@@ -193,14 +193,18 @@ namespace quicksort_mm {
 
   // ======================================================
   // Quicksort with median of medians
+  //
+  // asymptotic comparison number for arrays of size N:
+  // Random:  1.44 N ln N + o(N ln N)
+  // Worst:  14.76 N ln N + o(N ln N)
   // ======================================================
   template<class RandomAccessIterator, class Compare>
   void quicksort_body(RandomAccessIterator first, RandomAccessIterator last, Compare cmp, size_t s)
   {
     size_t nelem = last - first;
-    if (s < 16) s = 16;
+    if (s < 10) s = 10;
 
-    if (nelem < 24) {
+    if (nelem < 16) {
       insertion_sort(first, last, cmp);
       return;
     }
@@ -238,6 +242,10 @@ namespace quicksort_mm {
 
   // ======================================================
   // Quickselect with median of medians
+  //
+  // asymptotic comparision number for arrays of size N:
+  // Random:  2.76 N + o(N)
+  // Worst:  26.50 N + o(N)
   // ======================================================
   template<class RandomAccessIterator, class Compare>
   void quickselect(RandomAccessIterator first, RandomAccessIterator kth, RandomAccessIterator last, Compare cmp)
