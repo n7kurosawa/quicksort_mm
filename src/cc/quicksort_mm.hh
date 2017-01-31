@@ -130,7 +130,7 @@ namespace quicksort_mm {
   RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, size_t s=2);
 
 
-  // Extension of the repeated step algorithm (3-5).
+  // A variant of the repeated step algorithm (3-5).
   // 3-3 and 4-4 are presented in the original paper.
   template<class RAIt, class Cmp>
   RAIt rs3_5_2_pick_pivot(RAIt first, RAIt last, Cmp cmp, size_t s)
@@ -142,7 +142,7 @@ namespace quicksort_mm {
     if (nelem < 15) return first + nelem/2;
     // The following cutoff values are not optimized and should be refined.
     if (nelem < 80) return median3(first, first+nelem/2, last-1, cmp);
-    if (nelem/40 < s) return median5(first, first+nelem/4, first+nelem/2, first+3*nelem/4, last-1, cmp);
+    if (nelem < s*30 || nelem < 200) return median5(first, first+nelem/4, first+nelem/2, first+3*nelem/4, last-1, cmp);
 
     size_t nnext = nelem/(15*s);
     auto p = first + 0*(nelem/15);
@@ -150,7 +150,7 @@ namespace quicksort_mm {
     auto r = last - 7*nnext;
 
     for (size_t i = 0; i < nnext; i++) {
-      // median of 5 median of 3
+      // median of 5 (median of 3)
       auto x0 = median3(p+i*7+0, p+i*7+1, p+i*7+2, cmp);
       auto x1 = median3(p+i*7+3, p+i*7+4, p+i*7+5, cmp);
       auto x2 = median3(p+i*7+6, q+i,     r+i*7+0, cmp);
@@ -160,6 +160,8 @@ namespace quicksort_mm {
       auto xx = median5(x0, x1, x2, x3, x4, cmp);
       if (xx != q+i) std::swap(*xx, *(q+i));
     }
+
+    // Get the median of (pseudo-) medians 
     return rs3_5_2_find_kth(q, q+nnext, nnext/2, cmp, s);
   }
 
@@ -179,6 +181,7 @@ namespace quicksort_mm {
   
     size_t nl = pivotx - first;
 
+    // Recursive application
     if (nl < k) {
       return rs3_5_2_find_kth(pivotx + 1, last, k-nl-1, cmp);
     }
@@ -204,16 +207,18 @@ namespace quicksort_mm {
     size_t nelem = last - first;
     if (s < 10) s = 10;
 
+    // Boundary condition
     if (nelem < 16) {
       insertion_sort(first, last, cmp);
       return;
     }
 
+    // Partition
     auto pivot = rs3_5_2_pick_pivot(first, last, cmp, s);
     auto pivot_position = partition(first, last, pivot, cmp);
 
-    // Recursively apply
-    // Assume tail call optimization
+    // Recursive application
+    // The tail call optimization is assumed
     // 12/17 ~ 0.7059 is an approximate value of sqrt(1/2)
     if (last - pivot_position < pivot_position - first) {
       quicksort_body(pivot_position+1, last, cmp, s*12/17);
