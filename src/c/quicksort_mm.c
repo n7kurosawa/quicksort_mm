@@ -11,12 +11,14 @@
 // * quicksort and quickselect[1], of course.
 // * median of medians or BFPRT[2].
 // * repeated step algorithms[3].
-// * thinning at the pivot selection[4].
+// * square root sampling[4].
+// * thinning at the pivot selection[5].
 //
 // [1] C.A.R. Hoare, Commun. ACM 4, 321 (1961).
 // [2] M. Blum, et al., J. Comput. Syst. Sci. 7, 448 (1973).
 // [3] K. Chen, A. Dumitrescu, arXiv:1409.3600 [cs.DS] (2014).
-// [4] N. Kurosawa, arXiv:1698.04852 [cs.DS] (2016).
+// [4] C.C. McGeoch, J.D. Tygar, Random Struct. Alg. 7, 287 (1995).
+// [5] N. Kurosawa, arXiv:1698.04852 [cs.DS] (2016).
 // ======================================================
 
 
@@ -96,6 +98,21 @@ static inline char *median3(char *p, char *q, char *r, comparator cmp)
 }
 
 
+// approximate square root
+static inline size_t approx_sqrt(size_t n)
+{
+    int base = -1;
+    while (0 < n) {
+        base += 1;
+        n /= 4;
+    }
+    return 1 << base;
+}
+
+
+
+
+
 // Hoare's Partition
 static char *partition(char *begin, char *pivot, size_t n, size_t sz, comparator cmp)
 {
@@ -151,6 +168,7 @@ static char *rs3_5_2_find_kth(char *p, size_t n, size_t sz, size_t thin, size_t 
 
 static char *rs3_5_2_pick_pivot(char *p, size_t n, size_t sz, size_t thin, comparator cmp)
 {
+    if (thin < 2) thin = 2;
     if (n < 15) return p + (n/2)*sz;
     if (n < 80) return median3(p, p+(n/2)*sz, p+(n-1)*sz, cmp);
     if (n < 30*thin || n < 200) return median5(p, p+(n/4)*sz, p+(n/2)*sz, p+(3*n/4)*sz, p+(n-1)*sz, cmp);    
@@ -219,11 +237,13 @@ static char *rs3_5_2_find_kth(char *p, size_t n, size_t sz, size_t thin, size_t 
 // Main routine of quick sort
 // ======================================================
 
-static void quicksort_body(char *begin, char *end, size_t sz, comparator cmp)
+static void quicksort_body(char *begin, char *end, size_t sz, comparator cmp, size_t thin)
 {
     assert(begin <= end);
     assert(sz > 0);
     assert((size_t)(end - begin) % sz == 0);
+
+    if (thin < 10) thin = 10;
 
     // Length of the input array
     size_t n = (size_t)(end - begin) / sz;
@@ -240,18 +260,19 @@ static void quicksort_body(char *begin, char *end, size_t sz, comparator cmp)
     }
 
     // Partition
-    char *pivot = rs3_5_2_pick_pivot(begin, n, sz, 21, cmp);
+    char *pivot = rs3_5_2_pick_pivot(begin, n, sz, thin, cmp);
     char *pivot_pos = partition(begin, pivot, n, sz, cmp);
 
     // Recursively apply
     // Assume tail call optimization
+    // 12/17 ~ 0.7059 is an approximate value of sqrt(1/2)
     if (end-pivot_pos < pivot_pos-begin) {
-        quicksort_body(pivot_pos+sz, end, sz, cmp);
-        quicksort_body(begin, pivot_pos, sz, cmp);
+        quicksort_body(pivot_pos+sz, end, sz, cmp, thin*12/17);
+        quicksort_body(begin, pivot_pos, sz, cmp, thin*12/17);
     }
     else {
-        quicksort_body(begin, pivot_pos, sz, cmp);
-        quicksort_body(pivot_pos+sz, end, sz, cmp);
+        quicksort_body(begin, pivot_pos, sz, cmp, thin*12/17);
+        quicksort_body(pivot_pos+sz, end, sz, cmp, thin*12/17);
     }
 }
 
@@ -261,8 +282,8 @@ static void quicksort_body(char *begin, char *end, size_t sz, comparator cmp)
 // Quicksort with median of medians
 //
 // asymptotic comparison number for arrays of size N:
-// Random:  1.55 N ln N + O(N)
-// Worst:  21.33 N ln N + O(N)
+// Random:  1.44 N ln N + o(N ln N)
+// Worst:  14.76 N ln N + o(N ln N)
 // ======================================================
 void quicksort_mm_quicksort(void *p, size_t n, size_t sz, comparator cmp)
 {
@@ -274,7 +295,7 @@ void quicksort_mm_quicksort(void *p, size_t n, size_t sz, comparator cmp)
     char *end = begin + n*sz;
 
     if (end < begin) return; // In this case the routine does not work.
-    quicksort_body(begin, end, sz, cmp);
+    quicksort_body(begin, end, sz, cmp, approx_sqrt(n));
 }
 
 
@@ -283,8 +304,8 @@ void quicksort_mm_quicksort(void *p, size_t n, size_t sz, comparator cmp)
 // Quickselect with median of medians
 //
 // asymptotic comparison number for arrays of size N:
-// Random:  2.83 N + o(N)
-// Worst:  26.40 N + o(N)
+// Random:  2.76 N + o(N)
+// Worst:  26.50 N + o(N)
 // ======================================================
 void quicksort_mm_quickselect(void *p, size_t n, size_t sz, size_t kth, comparator cmp)
 {
@@ -297,5 +318,5 @@ void quicksort_mm_quickselect(void *p, size_t n, size_t sz, size_t kth, comparat
     char *end = begin + n*sz;
 
     if (end < begin) return; // In this case the routine does not work.
-    rs3_5_2_find_kth(p, n, sz, 21, kth, cmp);
+    rs3_5_2_find_kth(p, n, sz, approx_sqrt(n), kth, cmp);
 }

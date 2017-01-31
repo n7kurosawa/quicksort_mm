@@ -212,6 +212,8 @@ namespace quicksort_mm {
     auto pivot = rs3_5_2_pick_pivot(first, last, cmp, s);
     auto pivot_position = partition(first, last, pivot, cmp);
 
+    // Recursively apply
+    // Assume tail call optimization
     // 12/17 ~ 0.7059 is an approximate value of sqrt(1/2)
     if (last - pivot_position < pivot_position - first) {
       quicksort_body(pivot_position+1, last, cmp, s*12/17);
