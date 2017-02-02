@@ -167,7 +167,7 @@ namespace quicksort_mm {
 
 
   template<class RAIt, class Cmp>
-  static RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, size_t s)
+  RAIt rs3_5_2_find_kth(RAIt first, RAIt last, size_t k, Cmp cmp, size_t s)
   {
     size_t nelem = last - first;
 
